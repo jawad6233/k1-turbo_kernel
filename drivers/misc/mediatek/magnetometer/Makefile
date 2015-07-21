@@ -24,6 +24,10 @@ ifeq ($(CONFIG_MTK_AKM8963),y)
 obj-y	+=  akm8963/
 endif
 
+ifeq ($(CONFIG_MTK_YAS530),y)
+obj-y   +=  yamaha530/
+endif
+
 ifeq ($(CONFIG_MTK_YAS532),y)
 obj-y   +=  yamaha532/
 endif

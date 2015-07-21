@@ -712,6 +712,10 @@ config MTK_S2200
 	bool "S2200 for Mediatek package"
 	default n
 
+config MTK_YAS530
+	bool "YAS530 for Mediatek package"
+	default n
+
 config MTK_YAS532
         bool "YAS532 for Mediatek package"
         default n
