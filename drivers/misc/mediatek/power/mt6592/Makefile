@@ -16,6 +16,9 @@ else
     ifeq ($(CONFIG_MTK_BQ24196_SUPPORT),y) 
         obj-$(CONFIG_MTK_SMART_BATTERY) += charging_hw_bq24196.o bq24196.o tbl_helper_func.o
     else
+    ifeq ($(CONFIG_MTK_BQ24158_SUPPORT),y)
+        obj-$(CONFIG_MTK_SMART_BATTERY) += bq24158.o charging_hw_bq24158.o
+    else
       ifeq ($(CONFIG_MTK_NCP1851_SUPPORT),y) 
         #obj-$(CONFIG_MTK_SMART_BATTERY) += mt_battery_ncp1851.o mt6320_fuel_gauge_ncp1851.o ncp1851.o
         obj-$(CONFIG_MTK_SMART_BATTERY) += addon/
@@ -32,5 +35,6 @@ else
                endif
           endif
       endif
+    endif
     endif
 endif

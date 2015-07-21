@@ -114,4 +114,8 @@
 #define FAN5405_BUSNUM 1
 #endif
 
+#ifdef CONFIG_MTK_BQ24158_SUPPORT
+#define BQ24158_BUSNUM 1
+#endif
+
 #endif /* _CUST_BAT_H_ */ 
