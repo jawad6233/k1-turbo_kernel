@@ -103,7 +103,7 @@
 #include "ov5647mipi_Camera_Sensor_para.h"
 #include "ov5647mipi_CameraCustomized.h"
 
-MSDK_SCENARIO_ID_ENUM CurrentScenarioId = MSDK_SCENARIO_ID_CAMERA_PREVIEW;
+static MSDK_SCENARIO_ID_ENUM CurrentScenarioId = MSDK_SCENARIO_ID_CAMERA_PREVIEW;
 static kal_bool OV5647MIPIAutoFlicKerMode = KAL_FALSE;
 //static kal_bool OV5647MIPIZsdCameraPreview = KAL_FALSE;
 
