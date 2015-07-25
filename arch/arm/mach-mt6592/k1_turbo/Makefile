@@ -3,7 +3,7 @@ include $(srctree)/drivers/misc/mediatek/Makefile.custom
 
 # Module project related part
 
-obj-y	+=  alsps/cm36283/
+# obj-y	+=  alsps/cm36283/
 obj-y   +=  accelerometer/bma222E/
 
 ifneq ($(CONFIG_ARCH_MTK_PROJECT),)
