@@ -5,6 +5,6 @@ obj-y   +=  alsps.o
 obj-y   +=  alsps_factory.o
 obj-y   +=  aal_control.o
 
-obj-y	+=  cm36283/
+# obj-y	+=  cm36283/
 
 obj-y	+=  tmg399x/

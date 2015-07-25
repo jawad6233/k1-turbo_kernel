@@ -1805,7 +1805,6 @@ void tmg399x_report_prox(struct tmg399x_chip *chip, u8 detected)
 		}
 	}
 }
-EXPORT_SYMBOL_GPL(tmg399x_report_prox);
 
 void tmg399x_report_ges(struct tmg399x_chip *chip, int ges_report)
 {
@@ -1877,7 +1876,6 @@ void tmg399x_report_ges(struct tmg399x_chip *chip, int ges_report)
 		input_sync(chip->p_idev);
 	}
 }
-EXPORT_SYMBOL_GPL(tmg399x_report_ges);
 
 void tmg399x_report_als(struct tmg399x_chip *chip)
 {
@@ -1899,7 +1897,6 @@ void tmg399x_report_als(struct tmg399x_chip *chip)
 		hwmsen_get_interrupt_data(ID_LIGHT,&hsd);
 	}
 }
-EXPORT_SYMBOL_GPL(tmg399x_report_als);
 
 static u8 tmg399x_ges_nswe_min(struct tmg399x_ges_nswe nswe)
 {
@@ -2162,7 +2159,6 @@ void tmg399x_start_calibration(struct tmg399x_chip *chip)
 	chip->shadow[TMG399X_GES_CFG_1] = chip->params.ges_cfg1;
 	tmg399x_i2c_write(chip, TMG399X_GES_CFG_1, chip->params.ges_cfg1);
 }
-EXPORT_SYMBOL_GPL(tmg399x_start_calibration);
 
 void tmg399x_set_ges_thresh(struct tmg399x_chip *chip, u8 entry, u8 exit)
 {
@@ -2177,7 +2173,6 @@ void tmg399x_set_ges_thresh(struct tmg399x_chip *chip, u8 entry, u8 exit)
 	chip->shadow[TMG399X_GES_CFG_1] = chip->params.ges_cfg1;
 	tmg399x_i2c_write(chip, TMG399X_GES_CFG_1, chip->params.ges_cfg1);
 }
-EXPORT_SYMBOL_GPL(tmg399x_set_ges_thresh);
 
 void tmg399x_rgbc_poll_handle(unsigned long data)
 {
@@ -2188,7 +2183,6 @@ void tmg399x_rgbc_poll_handle(unsigned long data)
 void tmg399x_update_rgbc(struct tmg399x_chip *chip)
 {
 }
-EXPORT_SYMBOL_GPL(tmg399x_update_rgbc);
 
 static int tmg399x_check_and_report(struct tmg399x_chip *chip)
 {

@@ -21,7 +21,7 @@
 #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/string.h>
-#include <tmg399x.h>
+#include "tmg399x.h"
 
 #define ARRAY_LENGTH	500
 
@@ -230,13 +230,6 @@ int arctan_table_x1024[] = {
 	5806,	6464,	7284,	8338,	9740,	11701,	14638,	19529,	29301,	58577//, 38895733
 };
 
-/* external functions */
-extern void tmg399x_start_calibration(struct tmg399x_chip *chip);
-extern void tmg399x_set_ges_thresh(struct tmg399x_chip *chip, u8 entry, u8 exit);
-extern void tmg399x_report_prox(struct tmg399x_chip *chip, int detected);
-extern void tmg399x_report_ges(struct tmg399x_chip *chip, int ges_report);
-extern void tmg399x_report_als(struct tmg399x_chip *chip);
-
 static int fix_sqrt(unsigned int x)
 {
 	unsigned int b, m, y = 0;
@@ -363,7 +356,6 @@ void set_visible_data_mode(struct tmg399x_chip *chip)
 	ges_dc_ok = false;
 	mfilter_dc_count = 0;
 }
-EXPORT_SYMBOL_GPL(set_visible_data_mode);
 
 static void set_hidden_data_mode(struct tmg399x_chip *chip)
 {
@@ -1426,7 +1418,6 @@ void process_rgbc_prox_ges_raw_data(struct tmg399x_chip *chip, u8 type, u8 *data
 		process_rgbc_data(chip, &color_data);
 	}
 }
-EXPORT_SYMBOL_GPL(process_rgbc_prox_ges_raw_data);
 
 /* Prox/Ges/RGBC processing parameters init */
 void init_params_rgbc_prox_ges(void)
@@ -1475,4 +1466,3 @@ void init_params_rgbc_prox_ges(void)
 	memset((void*)&colorfilter, 0x00, sizeof(struct sColor4));
 	memset((void*)&colorfilter16, 0x00, sizeof(struct sColor4));
 }
-EXPORT_SYMBOL_GPL(init_params_rgbc_prox_ges);

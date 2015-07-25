@@ -457,4 +457,19 @@ struct tmg399x_i2c_platform_data {
 	int segment_num;
 };
 
+void process_rgbc_prox_ges_raw_data(struct tmg399x_chip *chip,
+	u8 type, u8 *data, u8 datalen);
+void init_params_rgbc_prox_ges(void);
+void set_visible_data_mode(struct tmg399x_chip *chip);
+void tmg399x_report_prox(struct tmg399x_chip *chip, u8 detected);
+void tmg399x_report_ges(struct tmg399x_chip *chip, int ges_report);
+void tmg399x_report_als(struct tmg399x_chip *chip);
+void tmg399x_set_ges_thresh(struct tmg399x_chip *chip,
+	u8 entry, u8 exit);
+void tmg399x_rgbc_poll_handle(unsigned long data);
+void tmg399x_start_calibration(struct tmg399x_chip *chip);
+void process_rgbc_prox_ges_raw_data(struct tmg399x_chip *chip, u8 type,
+	u8 *data, u8 datalen);
+void init_params_rgbc_prox_ges(void);
+
 #endif /* __TMG399X_H */
