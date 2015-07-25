@@ -120,7 +120,7 @@ static kal_bool OV5647MIPIAutoFlicKerMode = KAL_FALSE;
 extern int iReadRegI2C(u8 *a_pSendData , u16 a_sizeSendData, u8 * a_pRecvData, u16 a_sizeRecvData, u16 i2cId);
 extern int iWriteRegI2C(u8 *a_pSendData , u16 a_sizeSendData, u16 i2cId);
 //Ivan added
-extern void kdCISModuleChangePinConfig(int CameraIdx, int Pin, int On);
+//extern void kdCISModuleChangePinConfig(int CameraIdx, int Pin, int On);
 
 UINT32 OV5647MIPISetMaxFrameRate(UINT16 u2FrameRate);
 
@@ -1080,7 +1080,7 @@ UINT32 OV5642GetSensorID(UINT32 *sensorID)
 		
 		if (*sensorID == OV5647MIPI_SENSOR_ID)
 		{
-		    kdCISModuleChangePinConfig(0,IDX_PS_CMPDN,GPIO_OUT_ONE);
+		    //kdCISModuleChangePinConfig(0,IDX_PS_CMPDN,GPIO_OUT_ONE);
 		    return ERROR_NONE;
 		}
 //Ivan end		
