@@ -47,16 +47,11 @@
 #define STATUS_UNSUPPORTED	-1
 #define GETARRAYNUM(array) (sizeof(array)/sizeof(array[0]))
 
+kal_uint32 iterm_level_flag=2;
 
  // ============================================================ //
  //global variable
  // ============================================================ //
-static CHARGER_TYPE g_charger_type = CHARGER_UNKNOWN;
-#if defined(MTK_WIRELESS_CHARGER_SUPPORT)
-#define WIRELESS_CHARGER_EXIST_STATE 0
-int wireless_charger_gpio_number   = (168 | 0x80000000); 
-#endif
-
 #if 1
 #include <cust_gpio_usage.h>
 int gpio_number   = GPIO_SWCHARGER_EN_PIN; 
@@ -93,8 +88,11 @@ const kal_uint32 VBAT_CV_VTH[]=
 
 const kal_uint32 CS_VTH[]=
 {
-	CHARGE_CURRENT_550_00_MA,   CHARGE_CURRENT_650_00_MA,	CHARGE_CURRENT_750_00_MA, CHARGE_CURRENT_850_00_MA,
+	/*CHARGE_CURRENT_550_00_MA,   CHARGE_CURRENT_650_00_MA,	CHARGE_CURRENT_750_00_MA, CHARGE_CURRENT_850_00_MA,
 	CHARGE_CURRENT_950_00_MA,   CHARGE_CURRENT_1050_00_MA,	CHARGE_CURRENT_1150_00_MA, CHARGE_CURRENT_1250_00_MA
+*/
+	CHARGE_CURRENT_750_00_MA,CHARGE_CURRENT_850_00_MA,CHARGE_CURRENT_1000_00_MA,CHARGE_CURRENT_1150_00_MA,
+	CHARGE_CURRENT_1250_00_MA,CHARGE_CURRENT_1400_00_MA,CHARGE_CURRENT_1600_00_MA,CHARGE_CURRENT_1800_00_MA
 }; 
 
  const kal_uint32 INPUT_CS_VTH[]=
@@ -110,13 +108,10 @@ const kal_uint32 CS_VTH[]=
 	  BATTERY_VOLT_07_500000_V, BATTERY_VOLT_08_500000_V,	  BATTERY_VOLT_09_500000_V,   BATTERY_VOLT_10_500000_V		  
  };
 
-static kal_uint32 charging_error = false;
  // ============================================================ //
  // function prototype
  // ============================================================ //
-
-static kal_uint32 charging_get_error_state(void);
-static kal_uint32 charging_set_error_state(void *data);
+ 
  
  // ============================================================ //
  //extern variable
@@ -130,8 +125,6 @@ static kal_uint32 charging_set_error_state(void *data);
  extern void Charger_Detect_Init(void);
  extern void Charger_Detect_Release(void);
  extern void mt_power_off(void);
- 
- extern bool get_usb_current_unlimited(void);
  
  // ============================================================ //
  kal_uint32 charging_value_to_parameter(const kal_uint32 *parameter, const kal_uint32 array_size, const kal_uint32 val)
@@ -295,13 +288,13 @@ static void hw_bc11_dump_register(void)
  static U32 hw_bc11_stepA1(void)
  {
 	U32 wChargerAvail = 0;
-
-	//RG_BC11_IPD_EN[1:0] = 01
-	upmu_set_rg_bc11_ipd_en(0x1);
-	//RG_BC11_VREF_VTH[1:0]=00
-	upmu_set_rg_bc11_vref_vth(0x0);
-	// RG_BC11_CMP_EN[1:0] = 01
-	upmu_set_rg_bc11_cmp_en(0x1);
+	  
+	//RG_BC11_IPU_EN[1.0] = 10
+	upmu_set_rg_bc11_ipu_en(0x2);
+	//RG_BC11_VREF_VTH = [1:0]=10
+	upmu_set_rg_bc11_vref_vth(0x2);
+	//RG_BC11_CMP_EN[1.0] = 10
+	upmu_set_rg_bc11_cmp_en(0x2);
  
 	//msleep(80);
 	mdelay(80);
@@ -314,8 +307,8 @@ static void hw_bc11_dump_register(void)
 		hw_bc11_dump_register();
 	}
  
-	//RG_BC11_IPD_EN[1.0] = 00
-	upmu_set_rg_bc11_ipd_en(0x0);
+	//RG_BC11_IPU_EN[1.0] = 00
+	upmu_set_rg_bc11_ipu_en(0x0);
 	//RG_BC11_CMP_EN[1.0] = 00
 	upmu_set_rg_bc11_cmp_en(0x0);
  
@@ -329,7 +322,7 @@ static void hw_bc11_dump_register(void)
 	  
 	//RG_BC11_IPU_EN[1.0] = 01
 	//upmu_set_rg_bc11_ipu_en(0x1);
-	upmu_set_rg_bc11_ipd_en(0x1);
+	upmu_set_rg_bc11_ipd_en(0x1);      
 	//RG_BC11_VREF_VTH = [1:0]=10
 	//upmu_set_rg_bc11_vref_vth(0x2);
 	upmu_set_rg_bc11_vref_vth(0x0);
@@ -484,45 +477,45 @@ static void hw_bc11_dump_register(void)
     
  }
 
+//add by alik
+static void set_chg_termination_current(void * level)
+{
+	iterm_level_flag=*(kal_uint32 *)(level);
+}
+//add end
+
  static kal_uint32 charging_hw_init(void *data)
  {
  	kal_uint32 status = STATUS_OK;
 	static bool charging_init_flag = KAL_FALSE;
 	
 	mt_set_gpio_mode(gpio_number,gpio_on_mode);  
-	mt_set_gpio_dir(gpio_number,gpio_on_dir);
-	mt_set_gpio_out(gpio_number,gpio_on_out);
-#if defined(MTK_WIRELESS_CHARGER_SUPPORT)
-	mt_set_gpio_mode(wireless_charger_gpio_number,0); // 0:GPIO mode
-	mt_set_gpio_dir(wireless_charger_gpio_number,0); // 0: input, 1: output
-#endif
-	battery_xlog_printk(BAT_LOG_FULL, "gpio_number=0x%x,gpio_on_mode=%d,gpio_off_mode=%d\n", gpio_number, gpio_on_mode, gpio_off_mode);
+    mt_set_gpio_dir(gpio_number,gpio_on_dir);
+    mt_set_gpio_out(gpio_number,gpio_on_out);
+
+    battery_xlog_printk(BAT_LOG_FULL, "gpio_number=0x%x,gpio_on_mode=%d,gpio_off_mode=%d\n", gpio_number, gpio_on_mode, gpio_off_mode);
 	
 	upmu_set_rg_usbdl_rst(1);		//force leave USBDL mode
-#if defined(HIGH_BATTERY_VOLTAGE_SUPPORT)
-	bq24158_config_interface_liao(0x06,0x77); // ISAFE = 1250mA, VSAFE = 4.34V
-#else
-	bq24158_config_interface_liao(0x06,0x70);
-#endif
+   
+	#if defined(HIGH_BATTERY_VOLTAGE_SUPPORT)
+        bq24158_config_interface_reg(0x06,0x77); // ISAFE = 1250mA, VSAFE = 4.34V
+    #else
+        bq24158_config_interface_reg(0x06,0x70);
+	#endif
 	    
-	bq24158_config_interface_liao(0x00,0xC0);	//kick chip watch dog
-	bq24158_config_interface_liao(0x01,0xb8);	//TE=1, CE=0, HZ_MODE=0, OPA_MODE=0
-	bq24158_config_interface_liao(0x05,0x03);
+    bq24158_config_interface_reg(0x00,0xC0);	//kick chip watch dog
+    bq24158_config_interface_reg(0x01,0xb8);	//TE=1, CE=0, HZ_MODE=0, OPA_MODE=0
+    bq24158_config_interface_reg(0x05,0x03);
+    if ( !charging_init_flag ) {   
+        bq24158_config_interface_reg(0x04,0x1A); //146mA
+        charging_init_flag = KAL_TRUE;
+    }        
+	bq24158_set_iterm(iterm_level_flag);
+ //add by alik support OTG.
+//	bq24158_set_otg_pl(1);
+//	bq24158_set_otg_en(1);
+//add end    
 
-#ifdef CONFIG_PROJECT_S4710
-      	bq24158_config_interface_liao(0x04,0x20); //850mA
-#else
-	
-	#ifdef CONFIG_PROJECT_S4700_MMX_IN
-	bq24158_config_interface_liao(0x04,0x19);
-#else	
-   bq24158_config_interface_liao(0x04,0x1A);  //146mA
-	if ( !charging_init_flag ) {   
-		bq24158_config_interface_liao(0x04,0x1A); //146mA
-		charging_init_flag = KAL_TRUE;
-	}
-#endif
-#endif
  	return status;
  }
 
@@ -542,28 +535,27 @@ static void hw_bc11_dump_register(void)
  	kal_uint32 status = STATUS_OK;
 	kal_uint32 enable = *(kal_uint32*)(data);
 
-	if(KAL_TRUE == enable) {
+	if(KAL_TRUE == enable)
+	{
 		bq24158_set_ce(0);
 		bq24158_set_hz_mode(0);
 		bq24158_set_opa_mode(0);
-	} else {
+	}
+	else
+	{
 
 #if defined(CONFIG_USB_MTK_HDRC_HCD)
    		if(mt_usb_is_device())
 #endif 			
-		{
-			mt_set_gpio_mode(gpio_number,gpio_off_mode);  
-			mt_set_gpio_dir(gpio_number,gpio_off_dir);
-			mt_set_gpio_out(gpio_number,gpio_off_out);
+    	{
+	        mt_set_gpio_mode(gpio_number,gpio_off_mode);  
+	        mt_set_gpio_dir(gpio_number,gpio_off_dir);
+	        mt_set_gpio_out(gpio_number,gpio_off_out);
 
-			// bq24158_set_ce(1);
-			if (charging_get_error_state()) {
-				bq24158_set_ce(0x1);
-				battery_xlog_printk(BAT_LOG_CRTI,"[charging_enable] bq24158_set_hz_mode(0x1)\n");
-				bq24158_set_hz_mode(0x1);	// disable power path
-			}
-		}
+	       // bq24158_set_ce(1);
+    	}
 	}
+		
 	return status;
  }
 
@@ -572,8 +564,7 @@ static void hw_bc11_dump_register(void)
  {
  	kal_uint32 status = STATUS_OK;
 	kal_uint16 register_value;
-	kal_uint32 cv_value = *(kal_uint32 *)(data);
-
+	
 	register_value = charging_parameter_to_value(VBAT_CV_VTH, GETARRAYNUM(VBAT_CV_VTH) ,*(kal_uint32 *)(data));
 	bq24158_set_oreg(register_value); 
 
@@ -713,14 +704,11 @@ static void hw_bc11_dump_register(void)
 
  static kal_uint32 charging_get_charger_det_status(void *data)
  {
-	kal_uint32 status = STATUS_OK;
+	   kal_uint32 status = STATUS_OK;
  
-	*(kal_bool*)(data) = upmu_get_rgs_chrdet();
+	   *(kal_bool*)(data) = upmu_get_rgs_chrdet();
 	   
-	if( upmu_get_rgs_chrdet() == 0 )
-		g_charger_type = CHARGER_UNKNOWN;
-       
-	return status;
+	   return status;
  }
 
 
@@ -736,22 +724,9 @@ kal_bool charging_type_detection_done(void)
 #if defined(CONFIG_POWER_EXT)
 	 *(CHARGER_TYPE*)(data) = STANDARD_HOST;
 #else
-#if defined(MTK_WIRELESS_CHARGER_SUPPORT)
-	int wireless_state = 0;
-	wireless_state = mt_get_gpio_in(wireless_charger_gpio_number);
-	if(wireless_state == WIRELESS_CHARGER_EXIST_STATE) {
-		*(CHARGER_TYPE*)(data) = WIRELESS_CHARGER;
-		battery_xlog_printk(BAT_LOG_CRTI, "WIRELESS_CHARGER!\r\n");
-		return status;
-	}
-#endif
-	if(g_charger_type!=CHARGER_UNKNOWN && g_charger_type!=WIRELESS_CHARGER) {
-		*(CHARGER_TYPE*)(data) = g_charger_type;
-		battery_xlog_printk(BAT_LOG_CRTI, "return %d!\r\n", g_charger_type);
-		return status;
-	}
 
 	charging_type_det_done = KAL_FALSE;
+
 	/********* Step initial  ***************/		 
 	hw_bc11_init();
  
@@ -761,15 +736,38 @@ kal_bool charging_type_detection_done(void)
 		 /********* Step A1 ***************/
 		 if(1 == hw_bc11_stepA1())
 		 {
-			*(CHARGER_TYPE*)(data) = APPLE_2_1A_CHARGER;
-			battery_xlog_printk(BAT_LOG_CRTI, "step A1 : Apple 2.1A CHARGER!\r\n");
+			 /********* Step B1 ***************/
+			 if(1 == hw_bc11_stepB1())
+			 {
+				 //*(CHARGER_TYPE*)(data) = NONSTANDARD_CHARGER;
+				 //battery_xlog_printk(BAT_LOG_CRTI, "step B1 : Non STANDARD CHARGER!\r\n");				
+				 *(CHARGER_TYPE*)(data) = APPLE_2_1A_CHARGER;
+				 battery_xlog_printk(BAT_LOG_CRTI, "step B1 : Apple 2.1A CHARGER!\r\n");
 			 }	 
 			 else
 			 {
-				*(CHARGER_TYPE*)(data) = NONSTANDARD_CHARGER;
-				battery_xlog_printk(BAT_LOG_CRTI, "step A1 : Non STANDARD CHARGER!\r\n");
+				 //*(CHARGER_TYPE*)(data) = APPLE_2_1A_CHARGER;
+				 //battery_xlog_printk(BAT_LOG_CRTI, "step B1 : Apple 2.1A CHARGER!\r\n");
+				 *(CHARGER_TYPE*)(data) = NONSTANDARD_CHARGER;
+				 battery_xlog_printk(BAT_LOG_CRTI, "step B1 : Non STANDARD CHARGER!\r\n");
 			 }	 
 		 }
+		 else
+		 {
+			 /********* Step C1 ***************/
+			 if(1 == hw_bc11_stepC1())
+			 {
+				 *(CHARGER_TYPE*)(data) = APPLE_1_0A_CHARGER;
+				 battery_xlog_printk(BAT_LOG_CRTI, "step C1 : Apple 1A CHARGER!\r\n");
+			 }	 
+			 else
+			 {
+				 *(CHARGER_TYPE*)(data) = APPLE_0_5A_CHARGER;
+				 battery_xlog_printk(BAT_LOG_CRTI, "step C1 : Apple 0.5A CHARGER!\r\n");			 
+			 }	 
+		 }
+ 
+	}
 	else
 	{
 		 /********* Step A2 ***************/
@@ -789,7 +787,7 @@ kal_bool charging_type_detection_done(void)
 		 }
 		 else
 		 {
-			*(CHARGER_TYPE*)(data) = STANDARD_HOST;
+         *(CHARGER_TYPE*)(data) = STANDARD_HOST;
 			 battery_xlog_printk(BAT_LOG_CRTI, "step A2 : Standard USB Host!\r\n");
 		 }
  
@@ -799,8 +797,6 @@ kal_bool charging_type_detection_done(void)
 	 hw_bc11_done();
 
  	charging_type_det_done = KAL_TRUE;
-
-	g_charger_type = *(CHARGER_TYPE*)(data);
 #endif
 	 return status;
 }
@@ -808,7 +804,10 @@ kal_bool charging_type_detection_done(void)
 static kal_uint32 charging_get_is_pcm_timer_trigger(void *data)
 {
     kal_uint32 status = STATUS_OK;
-
+//add by alik support OTG.
+//	bq24158_set_otg_pl(1);
+//	bq24158_set_otg_en(1);
+//add end
     if(slp_get_wake_reason() == WR_PCM_TIMER)
         *(kal_bool*)(data) = KAL_TRUE;
     else
@@ -844,41 +843,11 @@ static kal_uint32 charging_get_platfrom_boot_mode(void *data)
 static kal_uint32 charging_set_power_off(void *data)
 {
     kal_uint32 status = STATUS_OK;
-
-    battery_xlog_printk(BAT_LOG_CRTI, "charging_set_power_off\n");
+  
+    battery_xlog_printk(BAT_LOG_CRTI, "charging_set_power_off=%d\n");
     mt_power_off();
-
+         
     return status;
-}
-
-static kal_uint32 charging_get_power_source(void *data)
-{
-	kal_uint32 status = STATUS_UNSUPPORTED;
-
-	return status;
-}
-
-static kal_uint32 charging_get_csdac_full_flag(void *data)
-{
-	return STATUS_UNSUPPORTED;	
-}
-
-static kal_uint32 charging_set_ta_current_pattern(void *data)
-{
-	return STATUS_UNSUPPORTED;	
-}
-
-static kal_uint32 charging_get_error_state(void)
-{
-	return charging_error;
-}
-
-static kal_uint32 charging_set_error_state(void *data)
-{
-	kal_uint32 status = STATUS_OK;
-	charging_error = *(kal_uint32*)(data);
-	
-	return status;
 }
 
  static kal_uint32 (* const charging_func[CHARGING_CMD_NUMBER])(void *data)=
@@ -901,10 +870,8 @@ static kal_uint32 charging_set_error_state(void *data)
 	,charging_set_platform_reset
 	,charging_get_platfrom_boot_mode
 	,charging_set_power_off
-	,charging_get_power_source
-	,charging_get_csdac_full_flag
-	,charging_set_ta_current_pattern
-	,charging_set_error_state
+	,set_chg_termination_current
+
  };
 
  

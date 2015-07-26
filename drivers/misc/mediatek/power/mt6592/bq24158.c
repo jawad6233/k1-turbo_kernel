@@ -50,8 +50,6 @@ static struct i2c_driver bq24158_driver = {
     .id_table    = bq24158_i2c_id,
 };
 
-//guomingyi20141118add.
-#define LOG_TAG "[bq24158]"
 /**********************************************************
   *
   *   [Global Variable] 
@@ -90,14 +88,6 @@ int bq24158_read_byte(kal_uint8 cmd, kal_uint8 *returnData)
     readData = cmd_buf[0];
     *returnData = readData;
 
-#ifdef LOG_TAG
-	if(cmd == 0x04 ||cmd == 0x06) 
-	{
-		printk(LOG_TAG "r:[0x%02x] : 0x%02x\n", cmd, readData);
-	}
-#endif
-
-
     // new_client->addr = new_client->addr & I2C_MASK_FLAG;
     new_client->ext_flag=0;
     
@@ -125,15 +115,7 @@ int bq24158_write_byte(kal_uint8 cmd, kal_uint8 writeData)
         mutex_unlock(&bq24158_i2c_access);
         return 0;
     }
-
-#ifdef LOG_TAG
-	if(cmd == 0x04 ||cmd == 0x06) 
-	{
-		printk(LOG_TAG "w:[0x%02x] : 0x%02x\n", cmd, writeData);
-	}
-#endif
-
-	
+    
     new_client->ext_flag=0;
     mutex_unlock(&bq24158_i2c_access);
     return 1;
@@ -197,7 +179,7 @@ kal_uint32 bq24158_config_interface (kal_uint8 RegNum, kal_uint8 val, kal_uint8 
 }
 
 //write one register directly
-kal_uint32 bq24158_config_interface_liao (kal_uint8 RegNum, kal_uint8 val)
+kal_uint32 bq24158_config_interface_reg (kal_uint8 RegNum, kal_uint8 val)
 {   
     int ret = 0;
     
@@ -579,18 +561,18 @@ void bq24158_hw_init(void)
         if(g_pmic_cid == 0x1020)
         {
             printk("[bq24158_hw_init] (0x06,0x70) because 0x1020\n");
-            bq24158_config_interface_liao(0x06,0x70); // set ISAFE
+            bq24158_config_interface_reg(0x06,0x70); // set ISAFE
         }
         else
         {
             printk("[bq24158_hw_init] (0x06,0x77)\n");
-            bq24158_config_interface_liao(0x06,0x77); // set ISAFE and HW CV point (4.34)
+            bq24158_config_interface_reg(0x06,0x77); // set ISAFE and HW CV point (4.34)
         }
     }
     else
     {
         printk("[bq24158_hw_init] (0x06,0x70) \n");
-        bq24158_config_interface_liao(0x06,0x70); // set ISAFE
+        bq24158_config_interface_reg(0x06,0x70); // set ISAFE
     }
 }
 #endif
@@ -686,6 +668,10 @@ static struct platform_driver bq24158_user_space_driver = {
     },
 };
 
+
+#ifndef BQ24158_BUSNUM
+#define BQ24158_BUSNUM 1
+#endif
 
 static struct i2c_board_info __initdata i2c_bq24158 = { I2C_BOARD_INFO("bq24158", (bq24158_SLAVE_ADDR_WRITE>>1))};
 

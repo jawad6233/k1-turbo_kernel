@@ -170,7 +170,7 @@ extern void bq24158_set_i_safe(kal_uint32 val);
 extern void bq24158_set_v_safe(kal_uint32 val);
 //---------------------------------------------------------
 extern void bq24158_dump_register(void);
-extern kal_uint32 bq24158_config_interface_liao (kal_uint8 RegNum, kal_uint8 val);
+extern kal_uint32 bq24158_config_interface_reg (kal_uint8 RegNum, kal_uint8 val);
 
 extern kal_uint32 bq24158_read_interface (kal_uint8 RegNum, kal_uint8 *val, kal_uint8 MASK, kal_uint8 SHIFT);
 extern kal_uint32 bq24158_config_interface (kal_uint8 RegNum, kal_uint8 val, kal_uint8 MASK, kal_uint8 SHIFT);
